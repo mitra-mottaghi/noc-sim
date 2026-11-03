@@ -12,12 +12,8 @@ def xy_route(src, dst):
     return path
 
 
-if __name__ == "__main__":
-    print(xy_route((0, 0), (3, 2)))
-
-
-def next_hop(cur, dst, queues, routing="xy"):
-    """Pick the next router. 'xy' is fixed; 'adaptive' picks the shorter queue."""
+def next_hop(cur, dst, queues, routing="xy", failed=frozenset()):
+    """Next router, or None if the needed link(s) have failed."""
     x, y = cur
     dx, dy = dst
     cand = []
@@ -26,5 +22,13 @@ def next_hop(cur, dst, queues, routing="xy"):
     if y != dy:
         cand.append((x, y + (1 if dy > y else -1)))
     if routing == "xy":
-        return cand[0]
+        n = cand[0]
+        return None if frozenset((cur, n)) in failed else n
+    cand = [n for n in cand if frozenset((cur, n)) not in failed]
+    if not cand:
+        return None
     return min(cand, key=lambda n: len(queues[n]))
+
+
+if __name__ == "__main__":
+    print(xy_route((0, 0), (3, 2)))
